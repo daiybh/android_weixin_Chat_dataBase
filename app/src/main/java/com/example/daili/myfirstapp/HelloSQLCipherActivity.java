@@ -14,7 +14,10 @@ import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteDatabaseHook;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class HelloSQLCipherActivity extends AppCompatActivity {
 String password ="";
@@ -23,8 +26,9 @@ String password ="";
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hello_sqlcipher);
       //  InitializeSQLCipher();
-        EditText et = (EditText)findViewById(R.id.textView2);
+        EditText et = findViewById(R.id.textView2);
         et.setText("/data/user/0/com.tencent.mm/MicroMsg/cc2e313400cbe3b7eefea293dc21f795/EnMicroMsg.db");
+        et.setText(this.getFilesDir()+"/EnMicroMsg.db");
         Intent intent = getIntent();
         password = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
         addText("Password:=>"+password);
@@ -40,7 +44,7 @@ String password ="";
                 + this.getCacheDir().toString());
 /**/
         try{
-            File databaseFile = getDatabasePath("//myfile.txt");
+            File databaseFile = getDatabasePath(getFilesDir()+"//myfile.txt");
             addText("absolutepath=>"+databaseFile.getAbsolutePath());
 
             if(!databaseFile.exists())
@@ -66,11 +70,11 @@ String password ="";
     }
     private  void addText(String s){
         Log.i("DDBBB",s);
-        EditText tv = (EditText)findViewById(R.id.editText2);
+        EditText tv = findViewById(R.id.editText2);
 
         String oldText = tv.getText().toString()+"\r\n"+s;
         tv.setText(oldText);
-        Toast.makeText(getApplicationContext(),oldText,Toast.LENGTH_SHORT).show();
+       // Toast.makeText(getApplicationContext(),oldText,Toast.LENGTH_SHORT).show();
     }
     private void InitializeSQLCipher() {
         File databaseFile = getDatabasePath("demo.db");
@@ -112,18 +116,54 @@ String password ="";
 
     }
     public void onClick(View view){
+
+
+        EditText et = findViewById(R.id.textView2);
+        addText("DB=>"+et.getText().toString());
+        String newPath = this.getFilesDir()+"//newdd.db";
+        copyFile(et.getText().toString(),newPath);
         readWeChatDatabase();
     }
 
+    public  void copyFile (String oldPath,String newPath){
+        try {
+            int bytesum = 0;
+            int byteread = 0;
+            File oldfile = new File(oldPath);
+            addText("oldFile=>>"+oldPath);
+            addText("newFile=>>"+newPath);
+            if (oldfile.exists()) { //文件存在时
+                addText("oldFile exists");
+                InputStream inStream = new FileInputStream(oldPath); //读入原文件
+                FileOutputStream fs = new FileOutputStream(newPath);
+                byte[] buffer = new byte[1444];
+                int length;
+                while ( (byteread = inStream.read(buffer)) != -1) {
+                    bytesum += byteread; //字节数 文件大小
+                    System.out.println(bytesum);
+                    fs.write(buffer, 0, byteread);
+                }
+                inStream.close();
+            }
+            else
+
+                addText("oldFile not exists");
+        }
+        catch (Exception e) {
+            System.out.println("复制单个文件操作出错");
+            e.printStackTrace();
+            addText("复制单个文件操作出错"+e.getStackTrace().toString());
+        }
+    }
     public void readWeChatDatabase() {
 
         SQLiteDatabase.loadLibs(this);
-        EditText et = (EditText)findViewById(R.id.textView2);
+        EditText et = findViewById(R.id.textView2);
         addText("DB=>"+et.getText().toString());
         File databaseFile = getDatabasePath(et.getText().toString());
         //File databaseFile = getDatabasePath("EnMicroMsg.db");
         //eventsData = new myDataHelper(this);
-
+addText("wechat==>"+databaseFile.getAbsolutePath());
         SQLiteDatabaseHook hook = new SQLiteDatabaseHook(){
             public void preKey(SQLiteDatabase database){
             }
